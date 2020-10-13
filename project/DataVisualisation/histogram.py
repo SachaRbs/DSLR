@@ -1,4 +1,4 @@
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import pandas as pd
 import sys
 
@@ -11,20 +11,22 @@ def historgam(df):
         data[house] = group.get_group(house)[course]
     # print(data)
     for i in data:
-        pyplot.hist(data[i], alpha=0.25, label=i)
-    pyplot.ylabel("nombre d'eleves")
-    pyplot.xlabel('notes')
-    pyplot.title(course)
-    pyplot.legend()
-    pyplot.show()
+        plt.hist(data[i], alpha=0.25, label=i)
+    plt.ylabel("nombre d'eleves")
+    plt.xlabel('notes')
+    plt.title(course)
+    plt.legend()
+    plt.savefig('../Images/histogram.png')
+    print('image saved in Image/histogram.png')
+
 
 def main():
     if len(sys.argv) == 2:
-        try:
-            df = pd.read_csv(sys.argv[1])
-            historgam(df)
-        except:
-            print("error")
+        # try:
+        df = pd.read_csv(sys.argv[1])
+        historgam(df)
+        # except:
+            # print("error")
 
 if __name__ == "__main__":
     main()
