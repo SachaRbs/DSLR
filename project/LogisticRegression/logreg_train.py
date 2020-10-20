@@ -16,6 +16,7 @@ class MultiLogisticRegression():
         self.nb_class = nb_class
     
     def fit(self, X, y):
+        self.classe = np.unique(y).tolist()
         self.thetas = np.zeros((self.nb_class, X.shape[1]))
         m = len(y)
         # ajouter une colonne de 1
@@ -25,6 +26,8 @@ class MultiLogisticRegression():
                 z = X.dot(self.thetas[i])
                 h = self.sigmoid(z)
                 self.thetas[i] = self.gradient(X, h, self.thetas[i], y_one, m)
+            # self.thetas[i] = (self.thetas[i], i)
+            
         # print(self.thetas)
         
     def gradient(self, X, h, theta, y, m):
@@ -33,15 +36,18 @@ class MultiLogisticRegression():
         return theta
 
     def predict(self, X):
-        #format predict
-        for i in range(0, self.nb_class):
-            print(self.sigmoid(X.dot(self.thetas[i])))
+        X_predicted = [max((self.sigmoid(i.dot(self.thetas[c])), c) for c in range(0, len(self.thetas)))[1] for i in X ]
+        return np.array(X_predicted)
+
+    def score(self, X, y):
+        score = sum(self.predict(X) == y) / len(y)
+        return score
 
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
 
     def loss(self, y, y_pred):
-        pass
+        passs
 
 def data_preprocessing(df):
     df['Best Hand'] = np.where(df['Best Hand'] == 'Right', 0, 1)
@@ -55,14 +61,12 @@ def main():
         df = pd.read_csv(sys.argv[1])
         df = df.drop(['First Name', 'Last Name', 'Birthday', 'Index'],axis=1)
         df = df.dropna()
-        # print(df.isnull().values.any())
         X, y, House = data_preprocessing(df)
         scaler = StandardScaler()
         X = scaler.fit_transform(X)
         model = MultiLogisticRegression(len(House))
         model.fit(X, y)
-        model.predict(X)
-        # print(list(House.keys())[list(House.values()).index(0)])
+        print(model.score(X, y))
 
 if __name__ == "__main__":
     main()
