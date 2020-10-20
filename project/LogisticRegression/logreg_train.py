@@ -46,8 +46,8 @@ class MultiLogisticRegression():
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
 
-    def loss(self, y, y_pred):
-        passs
+# def StandartScaller(X):
+#     return (X - np.mean(X)) / np.std(X)
 
 def data_preprocessing(df):
     df['Best Hand'] = np.where(df['Best Hand'] == 'Right', 0, 1)
@@ -63,7 +63,9 @@ def main():
         df = df.dropna()
         X, y, House = data_preprocessing(df)
         scaler = StandardScaler()
+        # recoder standart Scaller
         X = scaler.fit_transform(X)
+        # X = StandartScaller(X)
         model = MultiLogisticRegression(len(House))
         model.fit(X, y)
         print(model.score(X, y))
