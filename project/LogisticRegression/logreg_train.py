@@ -1,3 +1,4 @@
+import csv
 import sys
 import pandas as pd
 import numpy as np
@@ -46,8 +47,10 @@ class MultiLogisticRegression():
     def sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
 
-# def StandartScaller(X):
-#     return (X - np.mean(X)) / np.std(X)
+    def save_theta(self):
+        with open('../resources/theta.csv', 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerows(self.thetas)
 
 def data_preprocessing(df):
     df['Best Hand'] = np.where(df['Best Hand'] == 'Right', 0, 1)
@@ -69,6 +72,7 @@ def main():
         model = MultiLogisticRegression(len(House))
         model.fit(X, y)
         print(model.score(X, y))
+        model.save_theta()
 
 if __name__ == "__main__":
     main()
