@@ -59,16 +59,23 @@ def data_preprocessing(df):
     y = y.map(House)
     return np.array(X), np.array(y), House
 
+def _StandartScaller(X):
+    for i in range(0, len(X[0])):
+        X[i] = X[i] - X.mean().mean() / X.std()
+    return X
+
 def main():
     if len(sys.argv) == 2:
         df = pd.read_csv(sys.argv[1])
         df = df.drop(['First Name', 'Last Name', 'Birthday', 'Index'],axis=1)
         df = df.dropna()
         X, y, House = data_preprocessing(df)
-        scaler = StandardScaler()
-        # recoder standart Scaller
-        X = scaler.fit_transform(X)
-        # X = StandartScaller(X)
+
+        # scaler = StandardScaler()
+        # X = scaler.fit_transform(X)
+
+        X = _StandartScaller(X)
+
         model = MultiLogisticRegression(len(House))
         model.fit(X, y)
         print(model.score(X, y))

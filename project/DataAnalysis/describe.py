@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import sys
 import pandas as pd
@@ -12,22 +13,6 @@ def _std(mean, count, data):
         return std
     return np.nan
 
-def describe_print(describe):
-    for line in describe[0]:
-        for categories in describe:
-            if len(str(categories[line])) > categories["len"]:
-                categories["len"] = len(str(categories[line]))
-    
-    for line in describe[0]:
-        if line != "name":
-            write = '{0:5s}'.format(line)
-        else:
-            write = '{0:5s}'.format("")
-        for categories in describe:
-            write = write + '{:>{width}s}'.format(str(categories[line]), width=categories["len"] + 2)
-        if line != "len":
-            print(write)
-
 def extract_value(name, data):
     _count = 0.0
     describe = {"name" : name,
@@ -38,8 +23,7 @@ def extract_value(name, data):
                  "25%": 0,
                  "50%": 0,
                  "75%": 0,
-                 "max": 0,
-                 "len":0}
+                 "max": 0}
     for value in data:
         if pd.isna(value) is False:
             describe["count"] = describe["count"] + 1
@@ -69,17 +53,23 @@ def _describe(df):
     describe = []
     for col in df:
         describe.append(extract_value(col, np.array(df[col])))
-    describe_print(describe)
+    describe = pd.DataFrame(data=describe).set_index('name').T
+    return describe
+    print(describe)
+
 
 def main():
-    if len(sys.argv) == 2:
-        try:
-            df = pd.read_csv(sys.argv[1])
-            data = np.array(df._get_numeric_data())
-            _describe(df)
-        except:
-            print("ERROR")
-    else:
-        print("Usage: python describy.py data.csv")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('data', help='path to data file')
+    args = parser.parse_args()
+    try:
+        df = pd.read_csv(args.data)
+        data = np.array(df._get_numeric_data())
+        describe = _describe(df)
+        print(describe)
+    except:
+        print('ERROR')
+    
+
 if __name__ == "__main__":
     main()
