@@ -9,7 +9,6 @@ def historgam(df):
     data = {}
     for house in houses:
         data[house] = group.get_group(house)[course]
-    # print(data)
     for i in data:
         plt.hist(data[i], alpha=0.25, label=i)
     plt.ylabel("nombre d'eleves")
@@ -22,11 +21,13 @@ def historgam(df):
 
 def main():
     if len(sys.argv) == 2:
-        # try:
-        df = pd.read_csv(sys.argv[1])
-        historgam(df)
-        # except:
-            # print("error")
+        try:
+            df = pd.read_csv(sys.argv[1])
+            historgam(df)
+        except:
+            print("error")
+    else:
+        print("no file")
 
 if __name__ == "__main__":
     main()

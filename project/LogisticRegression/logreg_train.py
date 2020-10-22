@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-
 House = {'Ravenclaw': 0,
          'Slytherin': 1,
          'Gryffindor': 2,
@@ -27,9 +26,6 @@ class MultiLogisticRegression():
                 z = X.dot(self.thetas[i])
                 h = self.sigmoid(z)
                 self.thetas[i] = self.gradient(X, h, self.thetas[i], y_one, m)
-            # self.thetas[i] = (self.thetas[i], i)
-            
-        # print(self.thetas)
         
     def gradient(self, X, h, theta, y, m):
         gradient_value = np.dot(X.T, (h - y)) / m
@@ -61,7 +57,7 @@ def data_preprocessing(df):
 
 def _StandartScaller(X):
     for i in range(0, len(X[0])):
-        X[i] = X[i] - X.mean().mean() / X.std()
+        X[i] = X[i] - X.mean().mean() / X[i].std()
     return X
 
 def main():
@@ -69,12 +65,33 @@ def main():
         df = pd.read_csv(sys.argv[1])
         df = df.drop(['First Name', 'Last Name', 'Birthday', 'Index'],axis=1)
         df = df.dropna()
-        X, y, House = data_preprocessing(df)
+        df['Best Hand'] = np.where(df['Best Hand'] == 'Right', 0, 1)
+        y = df['Hogwarts House']
+        df = df.drop('Hogwarts House', axis=1)
+        y = y.map(House)
+
+        cols = list(df.columns)    # I didn't want to scale the "Class" colum
+
+        std_scal = StandardScaler()
+        standardized = std_scal.fit_transform(df[cols])
+        df_standardized_fit = pd.DataFrame(standardized, index=df.index, columns=df.columns[1:])
+
+        df_standardized_manual = (df - df.mean()) / df.std()
+        df_standardized_manual.drop("Class", axis=1, inplace=True)
+        int(df_standardized_fit)
+        exit()
+
+
+
+        # X, y, House = data_preprocessing(df)
 
         # scaler = StandardScaler()
         # X = scaler.fit_transform(X)
+        # print(X.std())
+        # print(X.mean()
 
-        X = _StandartScaller(X)
+        # X = _StandartScaller(X)
+        print(X)
 
         model = MultiLogisticRegression(len(House))
         model.fit(X, y)
