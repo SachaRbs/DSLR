@@ -29,15 +29,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('data', help='path to data file')
     parser.add_argument('thetas', help='path to thetas file')
-
     args = parser.parse_args()
 
     df = pd.read_csv(args.data)
     thetas = np.genfromtxt(args.thetas, delimiter=',')
     df = df.drop(['First Name', 'Last Name', 'Birthday', 'Index'],axis=1)
-    X, _, _ = data_preprocessing(df)
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
+    X, _ = data_preprocessing(df)
+    # scaler = StandardScaler()
+    # X = scaler.fit_transform(X)
     y_pred = predict(X, thetas)
     print_csv(y_pred)
 

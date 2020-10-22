@@ -1,8 +1,10 @@
-import csv
+import argparse
 import sys
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+import csv
+from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import StandardScaler
 
 House = {'Ravenclaw': 0,
          'Slytherin': 1,
@@ -49,54 +51,76 @@ class MultiLogisticRegression():
                 writer.writerows(self.thetas)
 
 def data_preprocessing(df):
+    df = df.fillna(df.groupby('Hogwarts House').transform('mean'))
     df['Best Hand'] = np.where(df['Best Hand'] == 'Right', 0, 1)
-    X = df.drop('Hogwarts House', axis=1)
     y = df['Hogwarts House']
+    df = df.drop('Hogwarts House', axis=1)
     y = y.map(House)
-    return np.array(X), np.array(y), House
+    df_standardized_manual = (df - df.mean()) / df.std()
+    X = np.array(df_standardized_manual)
+    X = np.insert(X, 0, 1, axis=1)
+    return X, y
 
-def _StandartScaller(X):
-    for i in range(0, len(X[0])):
-        X[i] = X[i] - X.mean().mean() / X[i].std()
-    return X
+# def print_metrics(matrix):
+#     TP = np.diag(matrix)
+#     FP = matrix.sum(axis=0) - np.diag(matrix)
+#     FN = matrix.sum(axis=1) - np.diag(matrix)
+#     TN = matrix.sum() - (FP + FN + TP)
+#     FP = FP.astype(float)
+#     FN = FN.astype(float)
+#     TP = TP.astype(float)
+#     TN = TN.astype(float)
+#     # Sensitivity, hit rate, recall, or true positive rate
+#     print("TPR = {}".format(TP/(TP+FN)))
+#     # Specificity or true negative rate
+#     print("TNR = {}".format(TN/(TN+FP)))
+#     # Precision or positive predictive value
+#     print("PPV = {}".format(TP/(TP+FP)))
+#     # Negative predictive value
+#     print("NPV = {}".format(TN/(TN+FN)))
+#     # Fall out or false positive rate
+#     print("FPR = {}".format(FP/(FP+TN)))
+#     # False negative rate
+#     print("FNR = {}".format(FN/(TP+FN)))
+#     # False discovery rate
+#     print("FDR = {}".format(FP/(TP+FP)))
+#     # Overall accuracy for each class
+#     print("acc = {}".format((TP+TN)/(TP+FP+FN+TN)))
+
+def confusion_matrix(y, y_pred):
+    labels = [0, 1, 2, 3]
+    matrix = pd.DataFrame(np.zeros((4, 4)))
+    for label1 in labels:
+        for label2 in labels:
+            matrix[label1][label2] = ((y_pred == label1) & (y == label2)).sum()
+    acc = (y_pred == y).sum() / len(y_pred)
+    print("accuracy : {}".format(acc))
+    print("-------Confusion Matrix------")
+    print(matrix)
 
 def main():
-    if len(sys.argv) == 2:
-        df = pd.read_csv(sys.argv[1])
+    try:
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument("data", help="path to the data file")
+        parser.add_argument("-m", '--metrics', help="print metrics of the model", action="store_true")
+
+        args = parser.parse_args()
+
+        df = pd.read_csv(args.data)
         df = df.drop(['First Name', 'Last Name', 'Birthday', 'Index'],axis=1)
-        df = df.dropna()
-        df['Best Hand'] = np.where(df['Best Hand'] == 'Right', 0, 1)
-        y = df['Hogwarts House']
-        df = df.drop('Hogwarts House', axis=1)
-        y = y.map(House)
+        X, y = data_preprocessing(df)
 
-        cols = list(df.columns)    # I didn't want to scale the "Class" colum
-
-        std_scal = StandardScaler()
-        standardized = std_scal.fit_transform(df[cols])
-        df_standardized_fit = pd.DataFrame(standardized, index=df.index, columns=df.columns[1:])
-
-        df_standardized_manual = (df - df.mean()) / df.std()
-        df_standardized_manual.drop("Class", axis=1, inplace=True)
-        int(df_standardized_fit)
-        exit()
-
-
-
-        # X, y, House = data_preprocessing(df)
-
-        # scaler = StandardScaler()
-        # X = scaler.fit_transform(X)
-        # print(X.std())
-        # print(X.mean()
-
-        # X = _StandartScaller(X)
-        print(X)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=29)
 
         model = MultiLogisticRegression(len(House))
-        model.fit(X, y)
-        print(model.score(X, y))
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X)
         model.save_theta()
+        if args.metrics:
+            confusion_matrix(y, y_pred)
+    except:
+        print("error")
 
 if __name__ == "__main__":
     main()
