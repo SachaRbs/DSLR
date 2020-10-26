@@ -1,13 +1,13 @@
-import argparse
 import numpy as np
 import sys
 import pandas as pd
+import argparse
 
 def _std(mean, count, data):
     if count != 0:
         diff = 0
         for value in data:
-             if pd.isna(value) is False:
+            if pd.isna(value) is False:
                 diff = diff + (value - mean)**2
         std = (diff / count)**0.5
         return std
@@ -48,27 +48,48 @@ def extract_value(name, data):
 
     return describe
 
+def correlation_matrix(df, describe):
+    try:
+        df = df.drop('Hogwarts House', axis=1)
+    except:
+        pass
+    df = df.fillna(df.mean())
+    columns = df.columns
+    matrix = {'_': columns}
+    arr = np.array(df.T)
+    m = len(arr[0])
+    for i in range(len(arr)):
+        matrix[columns[i]] = []
+        for j in range(len(arr)):
+            cov = sum((arr[i] - float(describe[columns[i]]['mean'])) * (arr[j] - float(describe[columns[j]]['mean']))) / m
+            matrix[columns[i]].append(cov / (float(describe[columns[i]]['std']) * float(describe[columns[j]]['std'])))
+
+    matrix = pd.DataFrame(matrix)
+    matrix = matrix.set_index('_')
+    print(matrix)
+
 def _describe(df):
-    df = df._get_numeric_data()
     describe = []
     for col in df:
         describe.append(extract_value(col, np.array(df[col])))
     describe = pd.DataFrame(data=describe).set_index('name').T
-    return describe
     print(describe)
-
+    return describe
 
 def main():
+    # try:
     parser = argparse.ArgumentParser()
     parser.add_argument('data', help='path to data file')
+    parser.add_argument('-c', '--correlation_matrix', help='print the correlation matrix of the dataFrame', action='store_true')
     args = parser.parse_args()
-    try:
-        df = pd.read_csv(args.data)
-        data = np.array(df._get_numeric_data())
-        describe = _describe(df)
-        print(describe)
-    except:
-        print('ERROR')
+    df = pd.read_csv(args.data)
+    df = df._get_numeric_data()
+    describe = _describe(df)
+    print(df.describe())
+    if args.correlation_matrix:
+        correlation_matrix(df, describe)
+    # except:
+        # print("ERROR")
     
 
 if __name__ == "__main__":
