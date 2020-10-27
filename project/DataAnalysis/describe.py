@@ -13,6 +13,25 @@ def _std(mean, count, data):
         return std
     return np.nan
 
+def correlation_matrix(df, describe):
+    df = df._get_numeric_data()
+    if "Hogwarts House" in df:
+        df = df.drop('Hogwarts House', axis=1)
+    df = df.fillna(df.mean())
+    columns = df.columns
+    matrix = {'_': columns}
+    arr = np.array(df.T)
+    m = len(arr[0])
+    for i in range(len(arr)):
+        matrix[columns[i]] = []
+        for j in range(len(arr)):
+            cov = sum((arr[i] - float(describe[columns[i]]['mean'])) * (arr[j] - float(describe[columns[j]]['mean']))) / m
+            matrix[columns[i]].append(cov / (_std(float(describe[columns[i]]['mean']), len(arr[i]), arr[i]) *
+                                            _std(float(describe[columns[j]]['mean']), len(arr[j]), arr[j])))
+    matrix = pd.DataFrame(matrix)
+    matrix = matrix.set_index('_')
+    return matrix
+
 def extract_value(name, data):
     _count = 0.0
     describe = {"name" : name,
@@ -48,32 +67,11 @@ def extract_value(name, data):
 
     return describe
 
-def correlation_matrix(df, describe):
-    try:
-        df = df.drop('Hogwarts House', axis=1)
-    except:
-        pass
-    df = df.fillna(df.mean())
-    columns = df.columns
-    matrix = {'_': columns}
-    arr = np.array(df.T)
-    m = len(arr[0])
-    for i in range(len(arr)):
-        matrix[columns[i]] = []
-        for j in range(len(arr)):
-            cov = sum((arr[i] - float(describe[columns[i]]['mean'])) * (arr[j] - float(describe[columns[j]]['mean']))) / m
-            matrix[columns[i]].append(cov / (float(describe[columns[i]]['std']) * float(describe[columns[j]]['std'])))
-
-    matrix = pd.DataFrame(matrix)
-    matrix = matrix.set_index('_')
-    print(matrix)
-
 def _describe(df):
     describe = []
     for col in df:
         describe.append(extract_value(col, np.array(df[col])))
     describe = pd.DataFrame(data=describe).set_index('name').T
-    print(describe)
     return describe
 
 def main():
@@ -85,9 +83,10 @@ def main():
     df = pd.read_csv(args.data)
     df = df._get_numeric_data()
     describe = _describe(df)
-    print(df.describe())
+    print(describe)
     if args.correlation_matrix:
-        correlation_matrix(df, describe)
+        print(correlation_matrix(df, describe))
+
     # except:
         # print("ERROR")
     
