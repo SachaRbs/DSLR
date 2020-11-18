@@ -3,8 +3,7 @@ import sys
 import pandas as pd
 import numpy as np
 import csv
-from sklearn.model_selection import train_test_split
-# from sklearn.preprocessing import StandardScaler
+from progress.bar import Bar
 
 House = {'Ravenclaw': 0,
          'Slytherin': 1,
@@ -21,13 +20,14 @@ class MultiLogisticRegression():
         self.classe = np.unique(y).tolist()
         self.thetas = np.zeros((self.nb_class, X.shape[1]))
         m = len(y)
-        # ajouter une colonne de 1
         for i in range(0, self.nb_class):
             y_one = (y == i).astype(int)
-            for _ in range(0, self.iterations):
-                z = X.dot(self.thetas[i])
-                h = self.sigmoid(z)
-                self.thetas[i] = self.gradient(X, h, self.thetas[i], y_one, m)
+            with Bar("Logistic Regression : {}/{}".format(i, self.nb_class), max=self.iterations) as bar:
+                for _ in range(0, self.iterations):
+                    bar.next()
+                    z = X.dot(self.thetas[i])
+                    h = self.sigmoid(z)
+                    self.thetas[i] = self.gradient(X, h, self.thetas[i], y_one, m)
         
     def gradient(self, X, h, theta, y, m):
         gradient_value = np.dot(X.T, (h - y)) / m
@@ -46,46 +46,23 @@ class MultiLogisticRegression():
         return 1 / (1 + np.exp(-z))
 
     def save_theta(self):
+        print("saving weights...")
         with open('../resources/theta.csv', 'w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerows(self.thetas)
 
-def data_preprocessing(df):
-    df = df.fillna(df.groupby('Hogwarts House').transform('mean'))
+def data_preprocessing(df, train):
+    y = None
+    if train:
+        df = df.fillna(df.groupby('Hogwarts House').transform('mean'))
+        y = df['Hogwarts House']
+        y = y.map(House)
     df['Best Hand'] = np.where(df['Best Hand'] == 'Right', 0, 1)
-    y = df['Hogwarts House']
     df = df.drop('Hogwarts House', axis=1)
-    y = y.map(House)
     df_standardized_manual = (df - df.mean()) / df.std()
     X = np.array(df_standardized_manual)
     X = np.insert(X, 0, 1, axis=1)
     return X, y
-
-# def print_metrics(matrix):
-#     TP = np.diag(matrix)
-#     FP = matrix.sum(axis=0) - np.diag(matrix)
-#     FN = matrix.sum(axis=1) - np.diag(matrix)
-#     TN = matrix.sum() - (FP + FN + TP)
-#     FP = FP.astype(float)
-#     FN = FN.astype(float)
-#     TP = TP.astype(float)
-#     TN = TN.astype(float)
-#     # Sensitivity, hit rate, recall, or true positive rate
-#     print("TPR = {}".format(TP/(TP+FN)))
-#     # Specificity or true negative rate
-#     print("TNR = {}".format(TN/(TN+FP)))
-#     # Precision or positive predictive value
-#     print("PPV = {}".format(TP/(TP+FP)))
-#     # Negative predictive value
-#     print("NPV = {}".format(TN/(TN+FN)))
-#     # Fall out or false positive rate
-#     print("FPR = {}".format(FP/(FP+TN)))
-#     # False negative rate
-#     print("FNR = {}".format(FN/(TP+FN)))
-#     # False discovery rate
-#     print("FDR = {}".format(FP/(TP+FP)))
-#     # Overall accuracy for each class
-#     print("acc = {}".format((TP+TN)/(TP+FP+FN+TN)))
 
 def confusion_matrix(y, y_pred):
     labels = [0, 1, 2, 3]
@@ -109,13 +86,12 @@ def main():
 
         df = pd.read_csv(args.data)
         df = df.drop(['First Name', 'Last Name', 'Birthday', 'Index'],axis=1)
-        X, y = data_preprocessing(df)
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=29)
+        X, y = data_preprocessing(df, 1)
 
         model = MultiLogisticRegression(len(House))
-        model.fit(X_train, y_train)
+        model.fit(X, y)
         y_pred = model.predict(X)
+        print("Accuracy : {}".format(model.score(X, y)))
         model.save_theta()
         if args.metrics:
             confusion_matrix(y, y_pred)

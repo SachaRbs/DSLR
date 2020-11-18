@@ -34,9 +34,7 @@ def main():
     df = pd.read_csv(args.data)
     thetas = np.genfromtxt(args.thetas, delimiter=',')
     df = df.drop(['First Name', 'Last Name', 'Birthday', 'Index'],axis=1)
-    X, _ = data_preprocessing(df)
-    # scaler = StandardScaler()
-    # X = scaler.fit_transform(X)
+    X, _ = data_preprocessing(df, 0)
     y_pred = predict(X, thetas)
     print_csv(y_pred)
 

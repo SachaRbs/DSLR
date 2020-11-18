@@ -75,20 +75,19 @@ def _describe(df):
     return describe
 
 def main():
-    # try:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('data', help='path to data file')
-    parser.add_argument('-c', '--correlation_matrix', help='print the correlation matrix of the dataFrame', action='store_true')
-    args = parser.parse_args()
-    df = pd.read_csv(args.data)
-    df = df._get_numeric_data()
-    describe = _describe(df)
-    print(describe)
-    if args.correlation_matrix:
-        print(correlation_matrix(df, describe))
-
-    # except:
-        # print("ERROR")
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument('data', help='path to data file')
+        parser.add_argument('-c', '--correlation_matrix', help='print the correlation matrix of the dataFrame', action='store_true')
+        args = parser.parse_args()
+        df = pd.read_csv(args.data)
+        df = df._get_numeric_data()
+        describe = _describe(df)
+        print(describe)
+        if args.correlation_matrix:
+            print(correlation_matrix(df, describe))
+    except:
+        print("ERROR")
     
 
 if __name__ == "__main__":
